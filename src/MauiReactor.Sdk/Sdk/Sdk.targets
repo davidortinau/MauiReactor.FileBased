@@ -1,0 +1,30 @@
+<Project>
+  <PropertyGroup>
+    <_MauiReactorDirectoryName>$([System.IO.Path]::GetFileName('$(MSBuildProjectDirectory)'))</_MauiReactorDirectoryName>
+    <ApplicationTitle Condition="'$(ApplicationTitle)' == ''">$(_MauiReactorDirectoryName)</ApplicationTitle>
+    <!-- Apple's dotnet run target opens $(AssemblyName).app; keep the bundle name aligned. -->
+    <AssemblyName>$(ApplicationTitle)</AssemblyName>
+    <ApplicationId Condition="'$(ApplicationId)' == ''">com.mauilabs.reactor.$([System.Text.RegularExpressions.Regex]::Replace('$(_MauiReactorDirectoryName)', '[^A-Za-z0-9]', '').ToLowerInvariant())</ApplicationId>
+    <ApplicationDisplayVersion Condition="'$(ApplicationDisplayVersion)' == ''">1.0</ApplicationDisplayVersion>
+    <ApplicationVersion Condition="'$(ApplicationVersion)' == ''">1</ApplicationVersion>
+    <SupportedOSPlatformVersion Condition="'$(SupportedOSPlatformVersion)' == ''">15.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Reactor.Maui" Version="$(MauiReactorPackageVersion)" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiControlsPackageVersion)" />
+    <PackageReference Include="Microsoft.Maui.DevFlow.Agent" Version="$(MauiDevFlowPackageVersion)"
+                      Condition="'$(Configuration)' == 'Debug' and '$(MauiReactorEnableDevFlow)' == 'true'" />
+    <Using Include="MauiReactor" />
+    <Compile Include="$(MSBuildThisFileDirectory)Startup.cs" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug' and '$(MauiReactorEnableDevFlow)' == 'true'">
+    <DefineConstants>$(DefineConstants);MAUI_REACTOR_DEVFLOW</DefineConstants>
+  </PropertyGroup>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="../build/Microsoft.Maui.Sdk.Reactor.targets" />
+  <Target Name="_ValidateMauiReactorFileBasedPlatform" BeforeTargets="PrepareForBuild">
+    <Error Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'maccatalyst' and
+                      $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'ios'"
+           Text="This experimental MauiReactor file-based SDK supports Mac Catalyst and iOS startup only. Use a standard MauiReactor project for other platforms." />
+  </Target>
+</Project>

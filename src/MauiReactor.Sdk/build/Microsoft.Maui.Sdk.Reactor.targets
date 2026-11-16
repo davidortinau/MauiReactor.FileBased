@@ -1,0 +1,13 @@
+<Project>
+  <Target Name="_MauiFileBasedDefaultAppManifest"
+          AfterTargets="_DetectAppManifest"
+          Condition="'$(UseMaui)' == 'true' and
+                     ($([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst' or
+                      $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios')">
+    <!-- Let the Apple SDK detect a consumer manifest before supplying our default. -->
+    <PropertyGroup Condition="'$(AppBundleManifest)' == ''">
+      <AppBundleManifest Condition="'$(ApplicationManifest)' != ''">$(ApplicationManifest)</AppBundleManifest>
+      <AppBundleManifest Condition="'$(AppBundleManifest)' == ''">$(MSBuildThisFileDirectory)DefaultInfo.plist</AppBundleManifest>
+    </PropertyGroup>
+  </Target>
+</Project>

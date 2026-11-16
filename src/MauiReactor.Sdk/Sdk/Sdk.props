@@ -1,0 +1,20 @@
+<Project>
+  <PropertyGroup>
+    <!-- File-based programs set console defaults before importing their SDK. -->
+    <TargetFramework Condition="'$(TargetFramework)' == '' or '$(TargetFramework)' == 'net10.0'">net10.0-maccatalyst</TargetFramework>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <PublishAot>false</PublishAot>
+    <PackAsTool>false</PackAsTool>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <MauiReactorPackageVersion>4.0.18</MauiReactorPackageVersion>
+    <MauiControlsPackageVersion>10.0.41</MauiControlsPackageVersion>
+    <MauiDevFlowPackageVersion>0.1.0-preview.13.26512.5</MauiDevFlowPackageVersion>
+    <MauiReactorEnableDevFlow Condition="'$(MauiReactorEnableDevFlow)' == ''">true</MauiReactorEnableDevFlow>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "David Ortinau",
+  "classifications": ["MAUI", "MauiReactor", "File-based", "Mac Catalyst"],
+  "identity": "davidortinau.MauiReactor.FileBased",
+  "name": "MauiReactor file-based app (experimental)",
+  "description": "A native Mac Catalyst counter in one C# file, with a locally packed MauiReactor SDK.",
+  "shortName": "maui-reactor-file",
+  "defaultName": "ReactorFileApp",
+  "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sources": [
+    {
+      "include": ["app.cs"]
+    }
+  ],
+  "primaryOutputs": [
+    {
+      "path": "app.cs"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>Microsoft.Maui.Sdk.Reactor</PackageId>
+    <Version>0.1.0-local.3</Version>
+    <Authors>David Ortinau</Authors>
+    <Description>Experimental file-based MauiReactor SDK with native startup and default Apple scene metadata.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IsPackable>true</IsPackable>
+    <IsShipping>false</IsShipping>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="build/**" Pack="true" PackagePath="build/" />
+    <None Include="Sdk/**" Pack="true" PackagePath="Sdk/" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>
