@@ -21,7 +21,7 @@
     <DefineConstants>$(DefineConstants);MAUI_REACTOR_DEVFLOW</DefineConstants>
   </PropertyGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-  <Import Project="../build/Microsoft.Maui.Sdk.Reactor.targets" />
+  <Import Project="../build/MauiReactor.FileBased.Sdk.targets" />
   <Target Name="_ValidateMauiReactorFileBasedPlatform" BeforeTargets="PrepareForBuild">
     <Error Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'maccatalyst' and
                       $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'ios'"

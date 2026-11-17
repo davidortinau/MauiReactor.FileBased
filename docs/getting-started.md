@@ -5,11 +5,12 @@ It uses [MauiReactor](https://github.com/adospace/reactorui-maui), the community
 library by Adolfo Marinucci. It does not use Microsoft's WinUI Reactor.
 
 The generated app contains `app.cs`, with no project file, XAML, platform startup
-files, or manifest. Shared build and native startup code lives in the local
-`Microsoft.Maui.Sdk.Reactor` package.
+files, or manifest. Shared build and native startup code lives in the
+`MauiReactor.FileBased.Sdk` package.
 
-**Status:** experimental, Mac Catalyst runtime checks only. The SDK package and
-template have not been published. Build the SDK from this checkout first.
+**Status:** experimental, Mac Catalyst runtime checks only. SDK previews are
+distributed through GitHub Packages, not NuGet.org. Install the template from
+this checkout.
 
 ## Install the prerequisites
 
@@ -20,6 +21,8 @@ Use macOS with:
 - The MAUI workload for that SDK.
 - Xcode compatible with the installed Apple workload.
 - Network access to the configured public dnceng NuGet proxy for first restore.
+- A GitHub personal access token (classic) with `read:packages`, and access to
+  the package. GitHub requires authentication for public NuGet packages too.
 
 For the workload set used in the runtime checks:
 
@@ -43,7 +46,7 @@ Installing the workload and installing Xcode are separate steps.
 | Reactor.Maui | 4.0.18 |
 | Microsoft.Maui.Controls | 10.0.41 |
 | DevFlow CLI and agent | 0.1.0-preview.13.26512.5 |
-| Local SDK package | 0.1.0-local.3 |
+| Original local SDK package | 0.1.0-local.3 |
 | Sample and template output | Native launch and counter state change passed |
 
 The host did not have Xcode 26.2. The runtime checks therefore added
@@ -52,28 +55,39 @@ the workload's version check; it does not make the combination supported. The
 normal commands below assume a matched Xcode and workload. Do not copy the
 override into a release build configuration.
 
-## Build the local SDK
+## Authenticate before SDK resolution
 
-From the repository root:
+The checkout's `NuGet.config` contains the feed URL, not credentials.
+It maps `MauiReactor.FileBased.Sdk` to GitHub Packages and other packages to
+the public dnceng feed. Keep this configuration beside your app or in a parent
+directory. The custom SDK resolves before normal package restore, so adding a
+`#:package` or a late `RestoreSources` property cannot bootstrap it.
+
+Create a personal access token **(classic)** with `read:packages`. The token
+must belong to a user who can read the package. Fine-grained tokens are not
+supported by this registry. Follow
+[GitHub's NuGet authentication guidance](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-nuget-registry).
+
+Set the NuGet credential environment variable in the shell that runs `dotnet`.
+For Zsh:
 
 ```console
-mkdir -p artifacts/feed
-dotnet pack src/MauiReactor.Sdk/MauiReactor.Sdk.csproj -o artifacts/feed
+read -rs "GITHUB_PACKAGES_TOKEN?GitHub Packages token: "; echo
+export NuGetPackageSourceCredentials_github="Username=YOUR_GITHUB_USERNAME;Password=$GITHUB_PACKAGES_TOKEN;ValidAuthenticationTypes=Basic"
+unset GITHUB_PACKAGES_TOKEN
 ```
 
-This creates `Microsoft.Maui.Sdk.Reactor.0.1.0-local.3.nupkg`.
-It contains `Sdk.props`, `Sdk.targets`, native startup C# source, and a default
-Apple scene manifest. It contains no framework implementation DLL.
-MauiReactor and .NET MAUI still provide the runtime UI.
+For Bash, replace the first command with
+`read -rsp "GitHub Packages token: " GITHUB_PACKAGES_TOKEN; echo`.
+Replace `YOUR_GITHUB_USERNAME` with your GitHub login. The suffix `github` must
+match the source key in `NuGet.config`, including case. Do not commit the token
+or paste it into a command argument. Unset the credential environment variable
+when finished: `unset NuGetPackageSourceCredentials_github`.
 
-The sample's `NuGet.config` points to `artifacts/feed` and the public dnceng
-package proxy. The .NET SDK resolves `#:sdk` before normal package restore.
-For that reason, a command-line restore source added too late in the build
-cannot replace this initial SDK feed configuration.
-
-When changing SDK contents, use a new local package version and update the
-directive. NuGet caches packages by identifier and version. Do not replace an
-already restored package version and assume the cache will change.
+An HTTP 401/403 means authentication or package access failed. Check the token
+type, scope, owner access, and source name. An SDK already in the global package
+cache can hide this problem; a first-time user must be able to download it.
+Published package visibility is controlled separately from repository visibility.
 
 ## Run the sample
 
@@ -99,15 +113,14 @@ cd artifacts/HelloReactor
 dotnet run app.cs
 ```
 
-The output is one `app.cs` file. It inherits the local feed and .NET 10 selection
+The output is one `app.cs` file. It inherits the feed and .NET 10 selection
 from the sample's parent directories. The app title defaults to `HelloReactor`.
 The template does not run restore or change a global NuGet configuration.
 
 To generate somewhere else, put a `NuGet.config` in that location or a parent
-directory. Add the absolute path to the packed SDK feed. Keep the approved
-package sources for your environment. Select .NET 10 there, for example with a
-parent `global.json`. You can then install this template by its checkout path
-and generate the same single C# file.
+directory. Copy this checkout's `NuGet.config` and `global.json`, and set the
+same credential environment variable in your shell. You can then install this
+template by its checkout path and generate the same single C# file.
 
 If an older checkout has already installed `maui-reactor-file`, the template
 engine can report conflicting templates. `dotnet new uninstall` lists the
@@ -121,7 +134,7 @@ source files. Do not remove another project's registration without checking it.
 The complete app is:
 
 ```csharp
-#:sdk Microsoft.Maui.Sdk.Reactor@0.1.0-local.3
+#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.1
 
 public class CounterState
 {
@@ -167,7 +180,7 @@ types. Add explicit namespace imports for other libraries when needed.
 support SDK, package, and property directives:
 
 ```csharp
-#:sdk Microsoft.Maui.Sdk.Reactor@0.1.0-local.3
+#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.1
 #:property ApplicationTitle=MyCounter
 #:property ApplicationId=com.example.mycounter
 ```
@@ -300,6 +313,71 @@ For a larger or distributable app, start with
 and move the component into a regular MAUI project. Keep its explicit native
 metadata, resources, signing, and platform setup. Automatic conversion of this
 custom SDK app to that project format has not been checked.
+
+## Publish a preview
+
+The package ID is `MauiReactor.FileBased.Sdk`. The package project sets
+`RepositoryUrl` to this repository so that GitHub attaches the package here.
+Publishing uses GitHub Packages, not NuGet.org.
+
+Versions use `0.1.0-preview.N`, starting with `0.1.0-preview.1`.
+Increase `N` in the SDK project and update the sample directive and documentation
+before publishing new contents. Versions are immutable; the workflow deliberately
+does not skip duplicate versions or overwrite packages.
+
+Run **Actions > Publish preview > Run workflow** on `main`, or push a tag such as
+`v0.1.0-preview.1` whose version exactly matches the SDK project. The workflow
+accepts only preview versions. A manual run also uses the checked-in version.
+It uses `contents: read` and `packages: write` with the short-lived `GITHUB_TOKEN`;
+no personal publishing token is needed in repository secrets.
+
+After publishing, a separate step resolves `Sdk.props` from an empty package
+cache using the authenticated GitHub feed. This checks registry consumption and
+early SDK resolution, not native app execution. Native Mac Catalyst checks still
+require macOS, the MAUI workload, and Xcode.
+
+GitHub initially gives new packages private visibility. Check the package's
+settings after the first publish and set the intended visibility and access.
+The repository being public does not by itself make a new package public.
+Even a public GitHub NuGet package requires authenticated downloads.
+
+### Develop the SDK locally
+
+Local development does not need a GitHub publishing token:
+
+```console
+dotnet pack src/MauiReactor.Sdk/MauiReactor.Sdk.csproj -o artifacts/feed
+mkdir -p artifacts/LocalCounter
+cp samples/Counter/app.cs artifacts/LocalCounter/app.cs
+```
+
+Create `artifacts/NuGet.config` with the following content. Its paths are relative
+to `artifacts/`, and its mapping overrides the parent configuration:
+
+```xml
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="local" value="feed" />
+    <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />
+  </packageSources>
+  <packageSourceMapping>
+    <clear />
+    <packageSource key="local">
+      <package pattern="MauiReactor.FileBased.Sdk" />
+    </packageSource>
+    <packageSource key="dotnet-public">
+      <package pattern="*" />
+    </packageSource>
+  </packageSourceMapping>
+</configuration>
+```
+
+Then run `dotnet run artifacts/LocalCounter/app.cs`. For changed SDK contents,
+use a new local version such as `0.1.0-local.4` and change the copied directive
+to match. NuGet caches packages by ID and version; a cached published version
+can otherwise hide local changes. Keep local-only versions out of publishing
+commits.
 
 ## Prior work and source references
 

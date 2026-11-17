@@ -1,4 +1,4 @@
-#:sdk Microsoft.Maui.Sdk.Reactor@0.1.0-local.3
+#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.1
 
 public class CounterState
 {

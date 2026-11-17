@@ -1,0 +1,91 @@
+name: Publish preview
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-preview
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      NuGetPackageSourceCredentials_github: Username=${{ github.actor }};Password=${{ secrets.GITHUB_TOKEN }};ValidAuthenticationTypes=Basic
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Pack preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(dotnet msbuild src/MauiReactor.Sdk/MauiReactor.Sdk.csproj -getProperty:Version -nologo)
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-preview\.[1-9][0-9]*$ ]] || {
+            echo "::error::Use a version such as 0.1.0-preview.1 in the SDK project."
+            exit 1
+          }
+          if [[ "$GITHUB_REF" == refs/tags/* && "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "::error::The tag must match the SDK project version: v$version"
+            exit 1
+          fi
+          echo "PACKAGE_VERSION=$version" >> "$GITHUB_ENV"
+          dotnet pack src/MauiReactor.Sdk/MauiReactor.Sdk.csproj \
+            --configuration Release --output artifacts/packages \
+            -p:ContinuousIntegrationBuild=true -p:RepositoryCommit="$GITHUB_SHA"
+      - name: Publish to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet nuget push "artifacts/packages/MauiReactor.FileBased.Sdk.$PACKAGE_VERSION.nupkg" \
+            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --api-key "$GITHUB_TOKEN"
+      - name: Verify published SDK from an empty package cache
+        env:
+          NUGET_PACKAGES: ${{ runner.temp }}/published-sdk-cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > artifacts/verify.proj <<EOF
+          <Project>
+            <Import Project="Sdk.props" Sdk="MauiReactor.FileBased.Sdk" Version="$PACKAGE_VERSION" />
+            <PropertyGroup>
+              <TargetFramework>net10.0</TargetFramework>
+              <UseMaui>false</UseMaui>
+            </PropertyGroup>
+            <Import Project="Sdk.targets" Sdk="MauiReactor.FileBased.Sdk" Version="$PACKAGE_VERSION" />
+          </Project>
+          EOF
+          actual=$(dotnet msbuild artifacts/verify.proj -getProperty:MauiReactorPackageVersion -nologo)
+          [[ "$actual" == "4.0.18" ]] || {
+            echo "::error::The published SDK did not resolve with the expected Reactor version."
+            exit 1
+          }
+          echo "Published and resolved MauiReactor.FileBased.Sdk $PACKAGE_VERSION from GitHub Packages." >> "$GITHUB_STEP_SUMMARY"
+          echo "Repository packages: https://github.com/${{ github.repository }}/packages" >> "$GITHUB_STEP_SUMMARY"
+      - name: Verify repository association
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          endpoint="users/${{ github.repository_owner }}/packages/nuget/MauiReactor.FileBased.Sdk"
+          repository=$(gh api "$endpoint" --jq '.repository.full_name')
+          [[ "$repository" == "${{ github.repository }}" ]] || {
+            echo "::error::The published package is not attached to this repository."
+            exit 1
+          }
+          gh api "$endpoint" --jq '"Package: \(.html_url)\nVisibility: \(.visibility)"' >> "$GITHUB_STEP_SUMMARY"

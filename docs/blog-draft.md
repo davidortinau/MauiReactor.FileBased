@@ -25,15 +25,16 @@ control methods. This experiment adds a small build SDK and a file-based
 template around that existing work.
 
 [alert type="important" heading="Experimental sample"]
-This is a source-checkout experiment. The SDK package and template are not
-published to NuGet.org. Mac Catalyst is the only runtime-checked target.
+This is an experimental preview. The SDK package is distributed through
+GitHub Packages, not NuGet.org. The template is installed from this checkout.
+Mac Catalyst is the only runtime-checked target.
 The source includes iOS startup, but Android and Windows startup are not included.
 [/alert]
 
 ## Start with the app
 
 ```csharp
-#:sdk Microsoft.Maui.Sdk.Reactor@0.1.0-local.3
+#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.1
 
 public class CounterState
 {
@@ -74,19 +75,20 @@ the native .NET MAUI control layer. The value lives in memory and resets when
 the app exits, which is enough to check a real state-update path without adding
 storage or services.
 
-## Build the small SDK
+## Run with the preview SDK
 
-From a checkout of this repository:
+From a checkout of this repository, first follow the
+[GitHub Packages authentication steps](getting-started.md#authenticate-before-sdk-resolution).
+GitHub requires a personal access token (classic) with `read:packages`, even
+for public NuGet packages. Keep credentials out of source control.
 
 ```console
-mkdir -p artifacts/feed
-dotnet pack src/MauiReactor.Sdk/MauiReactor.Sdk.csproj -o artifacts/feed
 dotnet run samples/Counter/app.cs
 ```
 
 You need the .NET 10 SDK, its .NET MAUI workload, and a compatible Xcode installation.
 The sample includes a `global.json` to select .NET 10 and a `NuGet.config` that
-points to the local package feed. The
+routes the preview SDK to GitHub Packages before normal restore. The
 [getting-started guide](getting-started.md) lists the exact package and tool
 versions.
 
@@ -109,7 +111,7 @@ counter itself.
 The custom SDK reduces the header to one directive:
 
 ```csharp
-#:sdk Microsoft.Maui.Sdk.Reactor@0.1.0-local.3
+#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.1
 ```
 
 An SDK is useful here because the target framework must be known before normal
@@ -143,7 +145,7 @@ dotnet run app.cs
 ```
 
 The template creates only `app.cs`. This output folder inherits the sample's
-local feed and .NET SDK selection. You can generate into another folder once
+feed and .NET SDK selection. You can generate into another folder once
 you configure those prerequisites there.
 
 Use the file name in the run command. Bare `dotnet run` did not find the

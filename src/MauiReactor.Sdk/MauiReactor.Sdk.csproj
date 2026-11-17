@@ -1,12 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <PackageId>Microsoft.Maui.Sdk.Reactor</PackageId>
-    <Version>0.1.0-local.3</Version>
+    <PackageId>MauiReactor.FileBased.Sdk</PackageId>
+    <Version>0.1.0-preview.1</Version>
     <Authors>David Ortinau</Authors>
     <Description>Experimental file-based MauiReactor SDK with native startup and default Apple scene metadata.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/davidortinau/MauiReactor.FileBased</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/davidortinau/MauiReactor.FileBased</PackageProjectUrl>
     <IsPackable>true</IsPackable>
     <IsShipping>false</IsShipping>
     <IncludeBuildOutput>false</IncludeBuildOutput>

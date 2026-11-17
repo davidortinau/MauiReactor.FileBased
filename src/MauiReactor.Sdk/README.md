@@ -1,13 +1,17 @@
 # MauiReactor file-based SDK (experimental)
 
-`Microsoft.Maui.Sdk.Reactor` is a local-only sample MSBuild SDK. It supplies
+`MauiReactor.FileBased.Sdk` is an experimental preview MSBuild SDK. It supplies
 MAUI build defaults, package references, C# startup source, and an Apple
 `Info.plist` with a `UIApplicationSceneManifest`. It has no compiled runtime
-library of its own. It is not published to NuGet.org.
+library of its own. Previews are distributed through
+[GitHub Packages](https://github.com/davidortinau/MauiReactor.FileBased/packages),
+not NuGet.org. This is a personal experiment, not an official Microsoft release.
 
-The sample uses `#:sdk Microsoft.Maui.Sdk.Reactor@0.1.0-local.3`.
-Build this package first and add its output folder as a restore source, as
-described in the [repository README](../../README.md).
+The sample uses `#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.1`.
+Configure the GitHub Packages feed and authenticate with a personal access token
+(classic) with `read:packages`, as described in the
+[repository README](https://github.com/davidortinau/MauiReactor.FileBased#run-the-counter).
+GitHub requires authentication even for public NuGet packages.
 SDK resolution happens before normal package restore, so the feed must be
 available in `NuGet.config`; a later `#:package` cannot bootstrap this SDK.
 

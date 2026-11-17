@@ -4,7 +4,7 @@
   "classifications": ["MAUI", "MauiReactor", "File-based", "Mac Catalyst"],
   "identity": "davidortinau.MauiReactor.FileBased",
   "name": "MauiReactor file-based app (experimental)",
-  "description": "A native Mac Catalyst counter in one C# file, with a locally packed MauiReactor SDK.",
+  "description": "A native Mac Catalyst counter in one C# file, with the MauiReactor preview SDK from GitHub Packages.",
   "shortName": "maui-reactor-file",
   "defaultName": "ReactorFileApp",
   "preferNameDirectory": true,
