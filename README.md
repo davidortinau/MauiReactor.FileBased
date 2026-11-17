@@ -75,7 +75,7 @@ Replace `YOUR_GITHUB_USERNAME` with your GitHub login. When finished, run
 
 Click **Increment**. The label changes from `Count: 0` to `Count: 1`.
 `NuGet.config` routes only this SDK to GitHub Packages and all other packages
-to the public dnceng feed. It must be available before SDK resolution.
+to nuget.org. It must be available before SDK resolution.
 The [getting-started guide](docs/getting-started.md) covers workload setup,
 the exact test environment, and troubleshooting.
 

@@ -67,6 +67,12 @@ jobs:
               <UseMaui>false</UseMaui>
             </PropertyGroup>
             <Import Project="Sdk.targets" Sdk="MauiReactor.FileBased.Sdk" Version="$PACKAGE_VERSION" />
+            <ItemGroup>
+              <PackageReference Remove="@(PackageReference)" />
+              <PackageDownload Include="Reactor.Maui" Version="[\$(MauiReactorPackageVersion)]" />
+              <PackageDownload Include="Microsoft.Maui.Controls" Version="[\$(MauiControlsPackageVersion)]" />
+              <PackageDownload Include="Microsoft.Maui.DevFlow.Agent" Version="[\$(MauiDevFlowPackageVersion)]" />
+            </ItemGroup>
           </Project>
           EOF
           actual=$(dotnet msbuild artifacts/verify.proj -getProperty:MauiReactorPackageVersion -nologo)
@@ -74,6 +80,8 @@ jobs:
             echo "::error::The published SDK did not resolve with the expected Reactor version."
             exit 1
           }
+          # The app needs these packages from the consumer feeds in NuGet.config.
+          dotnet restore artifacts/verify.proj -nologo
           echo "Published and resolved MauiReactor.FileBased.Sdk $PACKAGE_VERSION from GitHub Packages." >> "$GITHUB_STEP_SUMMARY"
           echo "Repository packages: https://github.com/${{ github.repository }}/packages" >> "$GITHUB_STEP_SUMMARY"
       - name: Verify repository association

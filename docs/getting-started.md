@@ -20,7 +20,7 @@ Use macOS with:
   .NET 10 feature band, starting at `10.0.100`.
 - The MAUI workload for that SDK.
 - Xcode compatible with the installed Apple workload.
-- Network access to the configured public dnceng NuGet proxy for first restore.
+- Network access to nuget.org and to GitHub Packages (including its Azure blob download host) for first restore.
 - A GitHub personal access token (classic) with `read:packages`, and access to
   the package. GitHub requires authentication for public NuGet packages too.
 
@@ -59,7 +59,7 @@ override into a release build configuration.
 
 The checkout's `NuGet.config` contains the feed URL, not credentials.
 It maps `MauiReactor.FileBased.Sdk` to GitHub Packages and other packages to
-the public dnceng feed. Keep this configuration beside your app or in a parent
+nuget.org. Keep this configuration beside your app or in a parent
 directory. The custom SDK resolves before normal package restore, so adding a
 `#:package` or a late `RestoreSources` property cannot bootstrap it.
 
@@ -359,14 +359,14 @@ to `artifacts/`, and its mapping overrides the parent configuration:
   <packageSources>
     <clear />
     <add key="local" value="feed" />
-    <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
   </packageSources>
   <packageSourceMapping>
     <clear />
     <packageSource key="local">
       <package pattern="MauiReactor.FileBased.Sdk" />
     </packageSource>
-    <packageSource key="dotnet-public">
+    <packageSource key="nuget.org">
       <package pattern="*" />
     </packageSource>
   </packageSourceMapping>
