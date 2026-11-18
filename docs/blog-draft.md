@@ -34,7 +34,7 @@ The source includes iOS startup, but Android and Windows startup are not include
 ## Start with the app
 
 ```csharp
-#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.1
+#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.2
 
 public class CounterState
 {
@@ -46,6 +46,9 @@ public class App : Component<CounterState>
     public override VisualNode Render()
         => ContentPage(
             VStack(
+                Image("dotnet_bot.png")
+                    .HeightRequest(185)
+                    .AutomationId("dotnet-bot"),
                 Label("Hello, MauiReactor!").FontSize(28),
                 Label("One C# source file. Native .NET MAUI controls."),
                 Label($"Count: {State.Count}")
@@ -65,7 +68,12 @@ That is the full user-authored application. The root component is a public
 `App` class in the global namespace. The SDK supplies a `MauiReactor` namespace
 import, so the component can use the library's inherited control methods.
 
-`ContentPage`, `VStack`, `Label`, and `Button` are methods on the component API.
+The image is a normal file in `Resources/Images/` next to `app.cs`. The SDK
+picks up `Resources/Images`, `Resources/Fonts`, and `Resources/Raw` the same way
+a MAUI project does, and registers fonts for you. The bot is the .NET 11 MAUI
+template artwork.
+
+`ContentPage`, `VStack`, `Image`, `Label`, and `Button` are methods on the component API.
 There is no need to write `new` for each control. The nesting still shows the
 structure of the page, while methods such as `Spacing` and `Padding` describe
 the layout.
@@ -111,7 +119,7 @@ counter itself.
 The custom SDK reduces the header to one directive:
 
 ```csharp
-#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.1
+#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.2
 ```
 
 An SDK is useful here because the target framework must be known before normal
@@ -203,7 +211,7 @@ MauiReactor's control methods and state model. The
 [detailed guide](getting-started.md) covers directives, manifests, feeds,
 platform limits, and the exact runtime checks.
 
-For an app that needs more platforms, resources, signing, or the established hot
+For an app that needs more platforms, an app icon, signing, or the established hot
 reload workflow, start with MauiReactor's
 [`Reactor.Maui.TemplatePack`](https://github.com/adospace/reactorui-maui#quick-start)
 and move the component into that project. You can keep the same style of UI

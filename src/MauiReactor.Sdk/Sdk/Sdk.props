@@ -4,6 +4,8 @@
     <TargetFramework Condition="'$(TargetFramework)' == '' or '$(TargetFramework)' == 'net10.0'">net10.0-maccatalyst</TargetFramework>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
+    <!-- dotnet run must always use the Apple run target, not run the cached DLL directly. -->
+    <FileBasedProgramCanSkipMSBuild>false</FileBasedProgramCanSkipMSBuild>
     <ImplicitUsings>disable</ImplicitUsings>
     <PublishAot>false</PublishAot>
     <PackAsTool>false</PackAsTool>

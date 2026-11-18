@@ -95,6 +95,7 @@ Published package visibility is controlled separately from repository visibility
 dotnet run samples/Counter/app.cs
 ```
 
+The window shows the .NET bot image from `samples/Counter/Resources/Images/`.
 Click **Increment**. The counter changes from `Count: 0` to `Count: 1`.
 The value is in-memory component state. It resets when the process exits.
 
@@ -113,14 +114,15 @@ cd artifacts/HelloReactor
 dotnet run app.cs
 ```
 
-The output is one `app.cs` file. It inherits the feed and .NET 10 selection
+The output is one `app.cs` file and the `Resources/Images/dotnet_bot.png` image
+it shows. It inherits the feed and .NET 10 selection
 from the sample's parent directories. The app title defaults to `HelloReactor`.
 The template does not run restore or change a global NuGet configuration.
 
 To generate somewhere else, put a `NuGet.config` in that location or a parent
 directory. Copy this checkout's `NuGet.config` and `global.json`, and set the
 same credential environment variable in your shell. You can then install this
-template by its checkout path and generate the same single C# file.
+template by its checkout path and generate the same single C# file and image.
 
 If an older checkout has already installed `maui-reactor-file`, the template
 engine can report conflicting templates. `dotnet new uninstall` lists the
@@ -134,7 +136,7 @@ source files. Do not remove another project's registration without checking it.
 The complete app is:
 
 ```csharp
-#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.1
+#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.2
 
 public class CounterState
 {
@@ -146,6 +148,9 @@ public class App : Component<CounterState>
     public override VisualNode Render()
         => ContentPage(
             VStack(
+                Image("dotnet_bot.png")
+                    .HeightRequest(185)
+                    .AutomationId("dotnet-bot"),
                 Label("Hello, MauiReactor!").FontSize(28),
                 Label("One C# source file. Native .NET MAUI controls."),
                 Label($"Count: {State.Count}")
@@ -167,7 +172,7 @@ parameterless constructor. The SDK's startup calls
 
 `Component<CounterState>` supplies `State` and `SetState`. The button callback
 changes state, and MauiReactor updates the native MAUI controls.
-`ContentPage`, `VStack`, `Label`, and `Button` are inherited factory methods.
+`ContentPage`, `VStack`, `Image`, `Label`, and `Button` are inherited factory methods.
 They keep the markup free of constructor syntax.
 
 The SDK adds `global using MauiReactor`. It disables implicit MAUI namespace
@@ -180,7 +185,7 @@ types. Add explicit namespace imports for other libraries when needed.
 support SDK, package, and property directives:
 
 ```csharp
-#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.1
+#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.2
 #:property ApplicationTitle=MyCounter
 #:property ApplicationId=com.example.mycounter
 ```
@@ -224,6 +229,57 @@ Apple SDK 27 requires scene-based lifecycle adoption. Omitting that metadata
 caused a native launch failure during development. The packaged manifest keeps
 this requirement out of the user's C# source.
 
+## Add images, fonts, and files
+
+Put resources in `Resources/` folders next to `app.cs`, as in a regular MAUI
+project:
+
+```text
+MyApp/
+├── app.cs
+└── Resources/
+    ├── Images/dotnet_bot.png
+    ├── Fonts/OpenSans-Semibold.ttf
+    └── Raw/data/hello.json
+```
+
+The .NET MAUI SDK does not add these folders by default. This SDK adds them,
+relative to the directory that contains `app.cs`:
+
+| Folder | MSBuild item | Use in code |
+|---|---|---|
+| `Resources/Images/**` | `MauiImage` | `Image("dotnet_bot.png")` |
+| `Resources/Fonts/**` | `MauiFont` | `.FontFamily("OpenSans-Semibold")` |
+| `Resources/Raw/**` | `MauiAsset`, logical name keeps the subfolder path | `FileSystem.OpenAppPackageFileAsync("data/hello.json")` |
+
+- **Images.** MAUI's resizetizer converts SVG files to PNG, so refer to
+  `logo.svg` as `"logo.png"`. The SDK does not set `BaseSize`. Set the size in
+  markup, for example `.HeightRequest(185)`.
+- **Fonts.** The SDK generates a `ConfigureFonts` registration for every file in
+  `Resources/Fonts/`. The alias is the file name without its extension. You do
+  not write a `MauiProgram`.
+- **Raw files.** Read them with `FileSystem.OpenAppPackageFileAsync`. Add
+  `using Microsoft.Maui.Storage;`, because the SDK disables implicit MAUI imports.
+  Use the same rule for `Aspect` and other MAUI types: add `using Microsoft.Maui;`
+  or use the full type name.
+
+Items that you already declared are not added twice. To add your own items only,
+turn off the automatic folders:
+
+```csharp
+#:property MauiReactorEnableDefaultResourceItems=false
+```
+
+The sample's `dotnet_bot.png` is the unchanged .NET 11 MAUI template image from
+[dotnet/maui](https://github.com/dotnet/maui):
+`src/Templates/src/templates/maui-mobile/Resources/Images/dotnet_bot.png`, added
+in commit
+[`4438dc6`](https://github.com/dotnet/maui/commit/4438dc6258f42593cd43da4db7527be96c78e69e)
+("Update .NET 11 template bot artwork", dotnet/maui#37785).
+
+App icons (`MauiIcon`) and splash screens (`MauiSplashScreen`) are not
+configured automatically.
+
 ## Inspect the app with DevFlow
 
 The SDK includes and registers the DevFlow agent only for Debug builds.
@@ -266,7 +322,10 @@ This check is not a store-distribution or security audit.
 ## Edit and rerun
 
 Quit the app, edit `app.cs`, and run `dotnet run app.cs` again. The .NET SDK
-rebuilds changed source. A second `open` of a running Mac Catalyst app can reuse
+rebuilds changed source. The SDK sets `FileBasedProgramCanSkipMSBuild=false`, so
+a rerun always goes through MSBuild and opens the app bundle. Without it, an
+unchanged rerun in preview.1 could run the DLL directly and fail with a
+`libhostpolicy.dylib` error. A second `open` of a running Mac Catalyst app can reuse
 the existing process, so quit before checking a source edit.
 
 Reactive updates through `SetState` are runtime state changes. They are separate
@@ -294,6 +353,18 @@ still needs a compatible workload, simulator or device, and platform-specific
 deployment settings. This guide does not claim that changing one directive
 proves that platform.
 
+### Known issue: very deep source folders
+
+With the Mac Catalyst workload 26.2.10191, a build can fail in the `Codesign`
+task with `Access to the path '/Users/Library' is denied`. This occurs when the
+folder that contains `app.cs` is about ten or more levels below `/`. The Apple
+SDK computes a stamp-file path relative to the source folder, but the file-based
+build output is in `~/Library/Application Support/dotnet/runfile/`, so the path
+climbs above your home folder. Move the app to a shorter path, for example
+`~/src/MyApp/app.cs`. The Apple SDK fix is
+[dotnet/macios#27050](https://github.com/dotnet/macios/pull/27050)
+(dotnet/macios#26867); a workload that contains it was not checked here.
+
 MauiReactor itself supports more targets than this small sample SDK. Use the
 upstream template for those platforms.
 
@@ -303,7 +374,7 @@ This is a **standalone native app**, not a companion-hosted script. The .NET SDK
 builds the source into an app bundle in its file-based build cache. There is no
 Go server, QR pairing step, or network code loader.
 
-The prototype has no app icon, custom fonts, splash assets, privacy permission
+The prototype has no app icon, splash assets, privacy permission
 strings, signing setup, entitlements file, or store packaging workflow.
 It does not enable Reactor's code hot reload or provide multi-file authoring.
 Counter state is not persistent storage.
@@ -348,7 +419,7 @@ Local development does not need a GitHub publishing token:
 ```console
 dotnet pack src/MauiReactor.Sdk/MauiReactor.Sdk.csproj -o artifacts/feed
 mkdir -p artifacts/LocalCounter
-cp samples/Counter/app.cs artifacts/LocalCounter/app.cs
+cp -R samples/Counter/app.cs samples/Counter/Resources artifacts/LocalCounter/
 ```
 
 Create `artifacts/NuGet.config` with the following content. Its paths are relative

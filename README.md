@@ -4,8 +4,13 @@ Build a native .NET MAUI app in one C# file. Describe the UI with
 [MauiReactor](https://github.com/adospace/reactorui-maui) control methods,
 update component state, and run it with `dotnet run app.cs`.
 
+**Supported targets in this preview:** Mac Catalyst on Apple Silicon is tested.
+iOS startup is included, but builds and runtime behavior are untested.
+Android, Windows, and Linux are **not supported**; the SDK reports an error for
+these targets. Use a standard MauiReactor project for other platforms.
+
 ```csharp
-#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.1
+#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.2
 
 public class CounterState
 {
@@ -17,6 +22,9 @@ public class App : Component<CounterState>
     public override VisualNode Render()
         => ContentPage(
             VStack(
+                Image("dotnet_bot.png")
+                    .HeightRequest(185)
+                    .AutomationId("dotnet-bot"),
                 Label("Hello, MauiReactor!").FontSize(28),
                 Label("One C# source file. Native .NET MAUI controls."),
                 Label($"Count: {State.Count}")
@@ -32,7 +40,7 @@ public class App : Component<CounterState>
 }
 ```
 
-That is the complete counter. You write the component while a small MSBuild SDK
+That is the complete counter, plus one image file in `Resources/Images/`. You write the component while a small MSBuild SDK
 supplies package references, native startup, application defaults, and the Apple
 scene manifest. There is no user-authored project file or XAML.
 
@@ -114,15 +122,42 @@ integrated. The SDK includes DevFlow in Debug builds for UI inspection and
 automation; [omit it](docs/getting-started.md#inspect-the-app-with-devflow)
 with `#:property MauiReactorEnableDevFlow=false`.
 
+## Add images, fonts, and files
+
+Put resources in `Resources/` folders next to `app.cs`, as in a regular MAUI
+project. The SDK includes them automatically:
+
+```text
+MyApp/
+├── app.cs
+└── Resources/
+    ├── Images/dotnet_bot.png        → MauiImage
+    ├── Fonts/OpenSans-Semibold.ttf  → MauiFont
+    └── Raw/data/hello.json          → MauiAsset
+```
+
+Refer to them with standard MAUI names:
+
+```csharp
+Image("dotnet_bot.png").HeightRequest(185)          // SVG files become PNG: use "name.png"
+Label("Hi").FontFamily("OpenSans-Semibold")         // font alias = file name without extension
+await FileSystem.OpenAppPackageFileAsync("data/hello.json");
+```
+
+The SDK registers each font for you. See
+[Add images, fonts, and files](docs/getting-started.md#add-images-fonts-and-files)
+for details and the opt-out property.
+
 ## Know the limits
 
 | Target or feature | Status |
 |---|---|
 | Mac Catalyst, Apple Silicon | Sample and template launch; counter interaction checked |
 | iOS | Startup source included; build and runtime untested |
-| Android, Windows, Linux | No startup implementation in this SDK |
+| Android, Windows, Linux | Not supported; the SDK reports an error for these targets |
 | Hot reload | Not integrated; quit, edit, rerun |
-| Icons, resources, signing, store packaging | Not configured |
+| Images, fonts, raw files | Included from `Resources/Images`, `Resources/Fonts`, `Resources/Raw` |
+| App icon, splash screen, signing, store packaging | Not configured |
 | SDK distribution | GitHub Packages preview; authentication required |
 | Template distribution | Install from this checkout |
 

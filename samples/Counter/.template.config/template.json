@@ -14,7 +14,8 @@
   },
   "sources": [
     {
-      "include": ["app.cs"]
+      "include": ["app.cs", "Resources/**"],
+      "copyOnly": ["Resources/**"]
     }
   ],
   "primaryOutputs": [

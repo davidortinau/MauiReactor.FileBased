@@ -7,7 +7,7 @@ library of its own. Previews are distributed through
 [GitHub Packages](https://github.com/davidortinau/MauiReactor.FileBased/packages),
 not NuGet.org. This is a personal experiment, not an official Microsoft release.
 
-The sample uses `#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.1`.
+The sample uses `#:sdk MauiReactor.FileBased.Sdk@0.1.0-preview.2`.
 Configure the GitHub Packages feed and authenticate with a personal access token
 (classic) with `read:packages`, as described in the
 [repository README](https://github.com/davidortinau/MauiReactor.FileBased#run-the-counter).
@@ -43,6 +43,7 @@ repository. Override them with `#:property` directives when needed:
 | `MauiControlsPackageVersion` | `10.0.41` |
 | `MauiDevFlowPackageVersion` | `0.1.0-preview.13.26512.5` |
 | `MauiReactorEnableDevFlow` | `true` (Debug only) |
+| `MauiReactorEnableDefaultResourceItems` | `true`: include `Resources/Images`, `Resources/Fonts`, and `Resources/Raw` next to `app.cs`, and register fonts by file name |
 
 Other version combinations are untested. The SDK disables Central Package
 Management for its consumer project. Extra dependencies can use `#:package`.

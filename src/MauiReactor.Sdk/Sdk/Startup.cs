@@ -19,7 +19,9 @@ public class AppDelegate : MauiUIApplicationDelegate
 {
     protected override MauiApp CreateMauiApp()
     {
-        var builder = MauiApp.CreateBuilder().UseMauiReactorApp<global::App>();
+        var builder = MauiApp.CreateBuilder()
+            .UseMauiReactorApp<global::App>()
+            .ConfigureFonts(MauiReactorFileBasedFonts.Register);
 #if DEBUG && MAUI_REACTOR_DEVFLOW
         builder.AddMauiDevFlowAgent();
 #endif

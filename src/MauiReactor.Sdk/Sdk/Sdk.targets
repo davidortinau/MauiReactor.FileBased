@@ -17,6 +17,28 @@
     <Using Include="MauiReactor" />
     <Compile Include="$(MSBuildThisFileDirectory)Startup.cs" />
   </ItemGroup>
+  <!-- Same folders and item types as the MAUI project template, relative to app.cs. -->
+  <ItemGroup Condition="'$(MauiReactorEnableDefaultResourceItems)' != 'false'">
+    <MauiImage Include="$(MSBuildProjectDirectory)/Resources/Images/**" Exclude="@(MauiImage)" />
+    <MauiFont Include="$(MSBuildProjectDirectory)/Resources/Fonts/**" Exclude="@(MauiFont)" />
+    <MauiAsset Include="$(MSBuildProjectDirectory)/Resources/Raw/**" Exclude="@(MauiAsset)"
+               LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <!-- Registers each MauiFont with its file name (without extension) as the alias. -->
+  <Target Name="_GenerateMauiReactorFonts" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <_MauiReactorFontsFile>$(IntermediateOutputPath)MauiReactorFileBasedFonts.g.cs</_MauiReactorFontsFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <_MauiReactorFontLine Include="@(MauiFont->'        fonts.AddFont(&quot;%(Filename)%(Extension)&quot;, &quot;%(Filename)&quot;)%3B')" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(_MauiReactorFontsFile)" Overwrite="true" WriteOnlyWhenDifferent="true"
+                      Lines="using Microsoft.Maui.Hosting%3B;namespace Microsoft.Maui.FileBased%3B;internal static class MauiReactorFileBasedFonts;{;    public static void Register(IFontCollection fonts);    {;@(_MauiReactorFontLine);    };}" />
+    <ItemGroup>
+      <Compile Include="$(_MauiReactorFontsFile)" />
+      <FileWrites Include="$(_MauiReactorFontsFile)" />
+    </ItemGroup>
+  </Target>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug' and '$(MauiReactorEnableDevFlow)' == 'true'">
     <DefineConstants>$(DefineConstants);MAUI_REACTOR_DEVFLOW</DefineConstants>
   </PropertyGroup>
